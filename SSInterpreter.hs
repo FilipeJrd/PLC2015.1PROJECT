@@ -54,6 +54,7 @@ eval env lam@(List (Atom "lambda":(List formals):body:[])) = return lam
 -- for doing so. The problem is that redefining define does not have
 -- the same semantics as redefining other functions, since define is not
 -- stored as a regular function because of its return type.
+eval env (List (Atom "comment": _)) = return (Comment)
 eval env (List (Atom "define": args)) = maybe (define env args) (\v -> return v) (Map.lookup "define" env)
 eval env (List (Atom func : args)) = mapM (eval env) args >>= apply env func 
 eval env (Error s)  = return (Error s)
