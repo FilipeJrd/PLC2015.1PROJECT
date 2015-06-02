@@ -127,6 +127,7 @@ environment =
           $ insert "-"              (Native numericSub) 
           $ insert "car"            (Native car)           
           $ insert "cdr"            (Native cdr)
+          $ insert "lt?"            (Native isLt) 
             empty
 
 type StateT = Map String LispVal
@@ -229,7 +230,7 @@ unpackNum (Number n) = n
 
 isLt :: [LispVal] -> LispVal
 isLt l = if onlyNumbers l 
-         then Bool (Prelude.foldr (<) 0 (lispToInteger l)) 
+         then (Bool (lesser (lispToInteger l)) )
          else Error "not a number."
  
 
@@ -245,6 +246,10 @@ lispToInteger ((Number n):xs) = (n:(lispToInteger xs))
 zeroIsMember :: [LispVal] -> Bool
 zeroIsMember [] = False
 zeroIsMember ((Number n):xs) = (n == 0) || zeroIsMember xs
+
+lesser :: [Integer] -> Bool
+lesser (x:xs) | xs == [] = True
+              |otherwise =  (x < (head xs)) && (lesser xs)
 
 
 --auxMod :: [LispVal] -> LispVal
