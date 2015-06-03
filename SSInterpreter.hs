@@ -129,6 +129,7 @@ environment =
           $ insert "car"            (Native car)           
           $ insert "cdr"            (Native cdr)
           $ insert "lt?"            (Native isLt) 
+          $ insert "eqv?"           (Native compareVal)
             empty
 
 type StateT = Map String LispVal
@@ -202,6 +203,28 @@ numericMod l = if (zeroIsMember l)
         then Error "Zero division"
         else numericBinOp (mod) l
 
+compareVal :: [LispVal] -> LispVal
+compareVal [Bool a, Bool b] = (Bool (a == b))
+compareVal [Number a, Number b] = (Bool (a == b))
+compareVal [String a, String b] = (Bool (a == b))
+compareVal [List a, List b] = (Bool (compareList a b))
+compareVal [DottedList a b, DottedList c d] = (Bool (compareDotted a b c d))
+compareVal [_, _] = (Bool False)
+
+compareList :: [LispVal] -> [LispVal] -> Bool
+compareList [] [] = True
+compareList [] _ = False
+compareList _ [] = False
+compareList (x:xs) (y:ys)
+ | asw = compareList xs ys
+ | otherwise = False
+ where Bool asw = (compareVal [x, y])
+
+compareDotted :: [LispVal] -> LispVal -> [LispVal] -> LispVal -> Bool
+compareDotted x y z w
+ | asw && (compareList x z) = True
+ | otherwise = False
+ where Bool asw = (compareVal [y, w])
 
 
 numericSub :: [LispVal] -> LispVal
