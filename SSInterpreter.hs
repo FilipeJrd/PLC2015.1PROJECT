@@ -130,6 +130,7 @@ environment =
           $ insert "cdr"            (Native cdr)
           $ insert "lt?"            (Native isLt) 
           $ insert "eqv?"           (Native compareVal)
+          $ insert "cons"           (Native cons)
             empty
 
 type StateT = Map String LispVal
@@ -226,6 +227,10 @@ compareDotted x y z w
  | otherwise = False
  where Bool asw = (compareVal [y, w])
 
+cons :: [LispVal] -> LispVal
+cons [el,(List xs)] = List (el:xs)
+cons [el,(DottedList xs x)] = DottedList (el : xs) x
+cons _ = Error "invalid argument."
 
 numericSub :: [LispVal] -> LispVal
 numericSub [] = Error "wrong number of arguments."
