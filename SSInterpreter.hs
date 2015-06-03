@@ -51,6 +51,7 @@ eval env (List (Atom "if":exp: thn: els:[])) = (eval env exp) >>=
             error@(Error _) -> return error
             otherwise -> return (Error ("Isn't conditional"));
             )
+eval env (List ((Atom "set!"): (Atom v): expr: [])) = (stateLookup env v )>>= (\x -> case x of {(Error err) -> return (Error err); otherwise -> (defineVar env v expr) })
 eval env (List [Atom "quote", val]) = return val
 eval env (List (Atom "begin":[v])) = eval env v
 
