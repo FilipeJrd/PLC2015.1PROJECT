@@ -44,8 +44,16 @@ eval env val@(String _) = return val
 eval env val@(Atom var) = stateLookup env var 
 eval env val@(Number _) = return val
 eval env val@(Bool _) = return val
+eval env (List (Atom "if":exp: thn: els:[])) = (eval env exp) >>= 
+			(\v -> case v of 
+            (Bool True) -> eval env thn
+            (Bool False) -> eval env els
+            error@(Error _) -> return error
+            otherwise -> return (Error ("Isn't conditional"));
+            )
 eval env (List [Atom "quote", val]) = return val
 eval env (List (Atom "begin":[v])) = eval env v
+
 eval env (List (Atom "begin": l: ls)) = (eval env l) >>= (\v -> case v of { (error@(Error _)) -> return error; otherwise -> eval env (List (Atom "begin": ls))})
 eval env (List (Atom "begin":[])) = return (List [])
 eval env lam@(List (Atom "lambda":(List formals):body:[])) = return lam
