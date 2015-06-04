@@ -73,7 +73,7 @@ stateLookup :: StateT -> String -> StateTransformer LispVal
 stateLookup env var = ST $ 
   (\s -> 
     (maybe (Error "variable does not exist.") 
-           id (Map.lookup var (union s env) 
+           id (Map.lookup var (union env s) --swap env and s, this way the program will read the local variables before the global
     ), s))
 
 
@@ -86,6 +86,7 @@ stateLookup env var = ST $
 define :: StateT -> [LispVal] -> StateTransformer LispVal
 define env [(Atom id), val] = defineVar env id val
 define env [(List [Atom id]), val] = defineVar env id val
+define env ((List (Atom id:args)):body:[]) = defineVar env id (List [Atom "lambda",(List args), body]) -- this pattern will help into recursive calls, since it defines the function as it is declared but it also replaces the id for lambda into its definition.
 -- define env [(List l), val]                                       
 define env args = return (Error "wrong number of arguments")
 defineVar env id val = 
