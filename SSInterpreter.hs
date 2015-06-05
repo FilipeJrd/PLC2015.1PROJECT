@@ -164,6 +164,7 @@ environment =
           $ insert "lt?"            (Native isLt) 
           $ insert "eqv?"           (Native compareVal)
           $ insert "cons"           (Native cons)
+          $ insert "append"         (Native append)
             empty
 
 type StateT = Map String LispVal
@@ -299,6 +300,10 @@ isLt l = if onlyNumbers l
 lispToInteger :: [LispVal] -> [Integer]
 lispToInteger [] = []
 lispToInteger ((Number n):xs) = (n:(lispToInteger xs))
+
+append :: [LispVal] -> LispVal
+append ((List x):(List y):[]) = List (x ++ y)
+append _ = Error "invalid operation"
 
 
 -----------------------------------------------------------
