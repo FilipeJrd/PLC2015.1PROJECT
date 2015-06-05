@@ -58,6 +58,7 @@ eval env (List (Atom "begin":[v])) = eval env v
 eval env (List (Atom "begin": l: ls)) = (eval env l) >>= (\v -> case v of { (error@(Error _)) -> return error; otherwise -> eval env (List (Atom "begin": ls))})
 eval env (List (Atom "begin":[])) = return (List [])
 eval env lam@(List (Atom "lambda":(List formals):body:[])) = return lam
+eval env (List (Atom "make-closure":(lam@(List (Atom "lambda":(List formals):body:[]))):[])) = return (List [(State env) , lam])
 -- The following line is slightly more complex because we are addressing the
 -- case where define is redefined by the user (whatever is the user's reason
 -- for doing so. The problem is that redefining define does not have
@@ -114,10 +115,22 @@ apply :: StateT -> String -> [LispVal] -> StateTransformer LispVal
 apply env func args =  
                   case (Map.lookup func env) of
                       Just (Native f)  -> return (f args)
-                      otherwise -> 
-                        (stateLookup env func >>= \res -> 
-                          case res of 
-                            List (Atom "lambda" : List formals : body:l) -> lambda env formals body args                              
+                      otherwise ->
+                        (stateLookup env func >>= \res ->
+                          case res of
+                            List (Atom "lambda" : List formals : body:l) -> lambda env formals body args 
+                            List [State s, lam@(List (Atom "lambda" : List formals : body:l))] -> ST (\sp -> 
+                              let --ajeitar
+                              currState = union s env; --currState is defined by the union between the native enviroment of the program and the state s of the program
+                              (ST fx) = lambda currState formals body args;
+                              (res, newState) = fx (union currState sp);
+                              newClosureState = intersection newState s;
+                              (ST fy) = eval newClosureState (List [Atom "define", Atom func, List [Atom "make-closure", lam]]);
+                              (res2, newStateWithClosure ) = fy $ union newState $ union env sp;
+                              global = union ( difference newStateWithClosure (difference s env)) env;
+
+                              in (res , global)
+                              )                                       
                             otherwise -> return (Error $ func ++ " not a function.")
                         )
  
